@@ -1,0 +1,15 @@
+[package]
+name = "clinicaltrials-gov-api"
+version = "2.0.3"
+authors = ["OpenAPI Generator team and contributors"]
+description = "This API is made available to provide users meta data, statistics, and the most recent version of the clinical trials available on ClinicalTrials.gov."
+# Override this license by providing a License Object in the OpenAPI.
+license = "Unlicense"
+edition = "2021"
+
+[dependencies]
+serde = { version = "^1.0", features = ["derive"] }
+serde_json = "^1.0"
+serde_repr = "^0.1"
+url = "^2.5"
+reqwest = { version = "^0.12", default-features = false, features = ["json", "multipart"] }
