@@ -1,0 +1,17 @@
+[package]
+name = "clinicaltrials-examples"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+clinicaltrials-gov-api = { path = ".." }
+tokio = { version = "1.0", features = ["full"] }
+chrono = { version = "0.4", features = ["serde"] }
+
+[[bin]]
+name = "financial_analyst_medical_devices"
+path = "financial_analyst_medical_devices.rs"
+
+[[bin]]
+name = "stock_catalyst_tracker"
+path = "stock_catalyst_tracker.rs"

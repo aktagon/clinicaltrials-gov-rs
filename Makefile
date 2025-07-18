@@ -1,4 +1,4 @@
-.PHONY: help install deps compile test clean generate all
+.PHONY: help install deps compile test clean generate all examples
 
 # Default target
 all: install generate compile test
@@ -54,3 +54,21 @@ clean: ## Clean build artifacts
 dev: generate compile ## Quick development build
 
 ci: install generate compile test ## Full CI pipeline
+
+examples: ## Run example programs
+	@echo "Available examples:"
+	@echo "  financial_analyst_medical_devices - Financial analyst searching medical device trials"
+	@echo "  stock_catalyst_tracker - Track upcoming clinical trial catalysts for stock analysis"
+	@echo ""
+	@echo "Run with: make run-example EXAMPLE=<example_name>"
+
+run-example: ## Run a specific example (use EXAMPLE=name)
+	@if [ -z "$(EXAMPLE)" ]; then \
+		echo "Error: Please specify an example name with EXAMPLE=<name>"; \
+		echo "Available examples:"; \
+		echo "  financial_analyst_medical_devices"; \
+		echo "  stock_catalyst_tracker"; \
+		exit 1; \
+	fi
+	@echo "Running example: $(EXAMPLE)"
+	cd examples && cargo run --bin $(EXAMPLE)
