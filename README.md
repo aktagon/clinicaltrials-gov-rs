@@ -1,10 +1,10 @@
 # clinicaltrials-gov-rs
 
-Rust client for the [ClinicalTrials.gov API v2](https://clinicaltrials.gov/data-about-studies/learn-about-api). Generated from the official OpenAPI 3.0.3 spec. All v2 endpoints. JSON, CSV, FHIR, and RIS output formats. Essie expression search. Distance-based geographic filtering. Async with tokio/reqwest.
+Async Rust client for the [ClinicalTrials.gov API v2](https://clinicaltrials.gov/data-about-studies/learn-about-api). All v2 endpoints. JSON, CSV, FHIR, and RIS formats. Essie expression search. Distance-based geographic filtering.
 
-## Installation
+Generated from the official OpenAPI 3.0.3 spec. Every parameter in the spec is a parameter on the Rust function — the signatures are wide and positional.
 
-Add this to your `Cargo.toml`:
+## Install
 
 ```toml
 [dependencies]
@@ -14,51 +14,65 @@ clinicaltrials-gov-api = "0.1.0"
 ## Quick Start
 
 ```rust
-use clinicaltrials_gov_api::apis::configuration::Configuration;
-use clinicaltrials_gov_api::apis::studies_api;
+use clinicaltrials_gov_api::apis::{configuration::Configuration, studies_api};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let config = Configuration::default();
-
-    // Search for lung cancer studies
     let studies = studies_api::list_studies(
         &config,
-        Some("json"),           // format
-        None,                   // markupFormat
-        Some("lung cancer"),    // query.cond
-        None,                   // Other query parameters...
-        None, None, None, None, None, None, None,
+        Some("json"), None, Some("lung cancer"),
+        // remaining OpenAPI parameters default to None
         None, None, None, None, None, None, None, None, None, None,
-        None, None, None,
-        Some(true),             // countTotal
-        Some(10),               // pageSize
-        None,                   // pageToken
+        None, None, None, None, None, None, None, None, None,
+        None, None, None, Some(true), Some(10), None,
     ).await?;
-
     println!("Found {} studies", studies.studies.len());
-
     Ok(())
 }
 ```
 
-## Development
+Run `cargo doc --open` for the full signatures.
 
-Requires Rust 1.70+ and Node.js (for OpenAPI Generator CLI).
+## Healthcare examples
 
-```bash
-make install    # install dependencies and generate client
-make generate   # regenerate from OpenAPI spec
-make compile    # build
-make test       # run tests
-make all        # full cycle
+**Phase 3 oncology trials within 50 km of Helsinki, as FHIR:**
+
+```rust
+let studies = studies_api::list_studies(
+    &config,
+    Some("fhir.json"), None, Some("cancer"), Some("phase 3"),
+    None, None, None, None, None, None, None, None,
+    Some("distance(60.1699,24.9384,50km)"),
+    None, None, None, None, None, None, None, None, None, None,
+    None, None, Some(true), Some(50), None,
+).await?;
 ```
 
-Generated from the official ClinicalTrials.gov OpenAPI spec using [OpenAPI Generator](https://openapi-generator.tech/). See [ADR-001](adrs/01-generate-client.md).
+**Currently recruiting COVID-19 vaccine studies:**
 
-## Documentation for API Endpoints
+```rust
+let studies = studies_api::list_studies(
+    &config,
+    Some("json"), None, Some("COVID-19"), Some("vaccine"),
+    None, None, None, None, None, None, None,
+    Some(vec!["RECRUITING".to_string()]),
+    None, None, None, None, None, None, None, None, None,
+    None, None, None, Some(true), Some(20), None,
+).await?;
+```
 
-All URIs are relative to *https://clinicaltrials.gov/api/v2*
+**Single study by NCT ID:**
+
+```rust
+let study = studies_api::fetch_study(
+    &config, "NCT04000165", Some("json"), None, None,
+).await?;
+```
+
+## Endpoints
+
+All URIs relative to `https://clinicaltrials.gov/api/v2`.
 
 | Class        | Method                                                                | HTTP request                  | Description       |
 | ------------ | --------------------------------------------------------------------- | ----------------------------- | ----------------- |
@@ -72,79 +86,31 @@ All URIs are relative to *https://clinicaltrials.gov/api/v2*
 | _StudiesApi_ | [**studies_metadata**](docs/StudiesApi.md#studies_metadata)           | **GET** /studies/metadata     | Data Model Fields |
 | _VersionApi_ | [**version**](docs/VersionApi.md#version)                             | **GET** /version              | Version           |
 
-## Models
+See [MODELS.md](MODELS.md) for the model list.
 
-See [MODELS.md](MODELS.md) for the full list, or run `cargo doc --open`.
+## Develop
 
-## Examples
+Requires Rust 1.70+ and Node.js for the OpenAPI Generator CLI.
 
-### Search by Condition
-
-```rust
-// Find COVID-19 vaccine studies
-let studies = studies_api::list_studies(
-    &config,
-    Some("json"),
-    None,
-    Some("COVID-19"),          // condition
-    Some("vaccine"),           // other terms
-    None, None, None, None, None, None, None,
-    Some(vec!["RECRUITING".to_string()]), // only recruiting
-    None, None, None, None, None, None, None, None, None,
-    None, None, None,
-    Some(true),  // count total
-    Some(20),    // page size
-    None
-).await?;
+```bash
+make install    # install tools, generate client
+make generate   # regenerate from OpenAPI spec
+make compile
+make test
 ```
 
-### Geographic Search
-
-```rust
-// Find studies within 50 miles of NIH (Bethesda, MD)
-let studies = studies_api::list_studies(
-    &config,
-    Some("json"), None, None, None, None, None, None, None, None, None, None,
-    None,
-    Some("distance(39.0035707,-77.1013313,50mi)"), // geo filter
-    None, None, None, None, None, None, None, None, None, None, None,
-    Some(true), Some(10), None
-).await?;
-```
-
-### Get Single Study
-
-```rust
-// Get specific study by NCT ID
-let study = studies_api::fetch_study(
-    &config,
-    "NCT04000165",  // nctId
-    Some("json"),   // format
-    None,           // markupFormat
-    None            // fields
-).await?;
-
-println!("Study: {}", study.protocol_section.unwrap().identification_module.unwrap().brief_title.unwrap());
-```
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Run tests: `make test`
-5. Submit a pull request
-
-## Support
-
-For questions, issues, or commercial support, contact [Aktagon Ltd.](mailto:christian@aktagon.com)
+See [ADR-001](adrs/01-generate-client.md) for the generation rationale.
 
 ## Links
 
-- [ClinicalTrials.gov API Documentation](https://clinicaltrials.gov/data-about-studies/learn-about-api)
-- [OpenAPI Specification](ctg-oas-v2.yaml)
-- [Architecture Decision Records](adrs/)
+- [ClinicalTrials.gov API docs](https://clinicaltrials.gov/data-about-studies/learn-about-api)
+- [OpenAPI spec](ctg-oas-v2.yaml)
+- [Architecture decisions](adrs/)
+
+## License
+
+MIT — see [LICENSE](LICENSE).
+
+---
+
+Built by [Aktagon](https://aktagon.com). Applied AI for regulated markets. Commercial support: [christian@aktagon.com](mailto:christian@aktagon.com).
